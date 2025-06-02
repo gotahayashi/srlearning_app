@@ -1,45 +1,39 @@
 ﻿import streamlit as st
 
-# ページ設定
-st.set_page_config(page_title="SRL学習アプリ - トップページ", layout="centered")
+st.set_page_config(page_title="英語学習アプリ", layout="centered")
 
-# サイドバーにナビゲーション案内
-with st.sidebar:
-    st.title("📚 SRL学習アプリ")
-    st.markdown("このアプリでは、自己調整学習（SRL）をサポートする様々な機能を提供します。")
-    st.markdown("- 🧭 ビジョン設定")
-    st.markdown("- 🕒 学習記録")
-    st.markdown("- 📈 進捗の可視化")
-    st.markdown("- 🔍 学習傾向の分析")
+st.title("🎓 英語の自己調整学習アプリ")
+st.markdown("ゼミ生の皆さん、ようこそ！このアプリでは、あなたの英語学習を記録・分析し、学習習慣をサポートします。")
 
-# トップページ本文
-st.title("🎓 自己調整英語学習アプリ")
+st.markdown("---")
 
-st.markdown("""
-### ようこそ！
+# 📱 モバイル対応ナビゲーション
+st.subheader("🔗 ナビゲーションメニュー")
+page = st.selectbox("📂 ページを選んで移動できます", [
+    "📘 学習ビジョンの設定",
+    "📝 学習記録の入力",
+    "📋 記録一覧",
+    "📈 学習時間の推移",
+    "📊 学期ごとの比較",
+    "📚 学習傾向の可視化",
+    "🔔 リマインドメッセージ"
+])
 
-このアプリでは、以下のことができます：
+# ✅ ページ遷移ロジック（switch_page を使う）
+if page == "📘 学習ビジョンの設定":
+    st.switch_page("pages/01_学習ビジョンの設定.py")
+elif page == "📝 学習記録の入力":
+    st.switch_page("pages/02_学習記録の入力.py")
+elif page == "📋 記録一覧":
+    st.switch_page("pages/03_記録一覧.py")
+elif page == "📈 学習時間の推移":
+    st.switch_page("pages/05_進捗グラフ.py")
+elif page == "📊 学期ごとの比較":
+    st.switch_page("pages/07_学期ごとの学習時間比較.py")
+elif page == "📚 学習傾向の可視化":
+    st.switch_page("pages/06_学習傾向の可視化.py")
+elif page == "🔔 リマインドメッセージ":
+    st.switch_page("pages/08_リマインドメッセージ.py")
 
-- 🎯 学習ビジョンの設定
-- ⏱ 学習記録の入力
-- 📋 記録一覧の確認
-- 📈 学習時間の可視化（週・学期単位）
-- 📊 学習傾向の分析
-- 💬 フィードバックの受け取り
-
----
-
-### 🔗 ナビゲーションリンク（左側メニューが使いにくい場合）
-
-- [📘 学習ビジョンの設定](/ビジョン設定)
-- [📝 学習記録の入力](/記録入力)
-- [📋 記録一覧](/記録一覧)
-- [📈 学習時間の推移](/進捗グラフ)
-- [📊 学期ごとの比較](/学期ごとの比較)
-- [📚 学習傾向の可視化](/学習傾向の可視化)
-- [🔔 リマインドメッセージ](/リマインド)
-
----
-
-### 👉 左のサイドバーからページを選んでください。
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown("📱 **スマートフォンでも使いやすくなりました！** 上のメニューからページを選んでください。")
