@@ -1,47 +1,49 @@
+import os
 import streamlit as st
 import pandas as pd
-import os
-import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
-# 日本語フォントの設定
-matplotlib.rcParams['font.family'] = 'MS Gothic'
+# 🎌 日本語フォントを読み込む
+FONT_PATH = os.path.join("fonts", "ipaexg.ttf")
+if os.path.exists(FONT_PATH):
+    font_prop = fm.FontProperties(fname=FONT_PATH)
+else:
+    font_prop = None
 
-st.set_page_config(page_title="学習傾向の可視化", layout="wide")
+# 📄 データ読み込み
+DATA_PATH = "data/logs.csv"
 st.title("📊 学習傾向の可視化")
 
-DATA_PATH = "data/logs.csv"
+try:
+    df = pd.read_csv(DATA_PATH)
 
-if os.path.exists(DATA_PATH):
-    logs = pd.read_csv(DATA_PATH)
+    users = df['name'].unique()
+    selected_user = st.selectbox("ユーザーを選択してください", users)
 
-    # 日付の型変換
-    if "date" in logs.columns:
-        logs["date"] = pd.to_datetime(logs["date"], errors="coerce")
+    user_data = df[df['name'] == selected_user]
 
-    # 数値変換（必要な列がある場合）
-    logs["study_time"] = pd.to_numeric(logs["study_time"], errors="coerce")
-    logs["focus"] = pd.to_numeric(logs["focus"], errors="coerce")
+    # seaborn でカテゴリ別の平均学習時間を可視化
+    fig, ax = plt.subplots()
+    sns.barplot(
+        data=user_data,
+        x='task',
+        y='study_time',
+        estimator='mean',
+        ci=None,
+        ax=ax
+    )
 
-    # 学習環境ごとの集中度平均
-    if "environment" in logs.columns and "focus" in logs.columns:
-        st.subheader("環境別の平均集中度")
-        env_focus = logs.groupby("environment")["focus"].mean().reset_index()
-        fig1, ax1 = plt.subplots()
-        sns.barplot(data=env_focus, x="environment", y="focus", ax=ax1)
-        ax1.set_title("学習環境と集中度の関係")
-        st.pyplot(fig1)
+    ax.set_xlabel("タスク", fontproperties=font_prop)
+    ax.set_ylabel("平均学習時間（分）", fontproperties=font_prop)
+    ax.set_title(f"{selected_user} さんの学習傾向", fontproperties=font_prop)
+    plt.xticks(rotation=45, fontproperties=font_prop)
+    plt.yticks(fontproperties=font_prop)
 
-    # 教材ごとの平均学習時間
-    if "material" in logs.columns and "study_time" in logs.columns:
-        st.subheader("教材別の平均学習時間")
-        mat_time = logs.groupby("material")["study_time"].mean().reset_index()
-        fig2, ax2 = plt.subplots()
-        sns.barplot(data=mat_time, x="material", y="study_time", ax=ax2)
-        ax2.set_title("教材と平均学習時間の関係")
-        plt.xticks(rotation=45)
-        st.pyplot(fig2)
+    st.pyplot(fig)
 
-else:
-    st.warning("まだ記録が存在しません。まずは記録を入力してください。")
+except FileNotFoundError:
+    st.warning(f"学習ログファイルが見つかりませんでした: {DATA_PATH}")
+except Exception as e:
+    st.error(f"エラーが発生しました: {e}")
