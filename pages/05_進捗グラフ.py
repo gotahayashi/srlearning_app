@@ -4,13 +4,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-# 🎌 フォントファイルを直接読み込んで日本語を表示（Cloudでも確実に効く）
+# 🎌 フォントファイルを直接読み込んで FontProperties を作成
 FONT_PATH = os.path.join("fonts", "ipaexg.ttf")
 if os.path.exists(FONT_PATH):
     font_prop = fm.FontProperties(fname=FONT_PATH)
-    plt.rcParams['font.family'] = font_prop.get_name()
 else:
-    plt.rcParams['font.family'] = 'sans-serif'  # fallback
+    font_prop = None  # fallback
 
 # 📄 CSVファイルの読み込み
 DATA_PATH = "data/logs.csv"
@@ -29,10 +28,12 @@ try:
     # 📊 グラフ描画
     fig, ax = plt.subplots()
     ax.plot(summary['date'], summary['study_time'], marker='o')
-    ax.set_xlabel("日付")
-    ax.set_ylabel("学習時間（分）")
-    ax.set_title(f"{selected_user} さんの学習時間の推移")
-    plt.xticks(rotation=45)
+
+    ax.set_xlabel("日付", fontproperties=font_prop)
+    ax.set_ylabel("学習時間（分）", fontproperties=font_prop)
+    ax.set_title(f"{selected_user} さんの学習時間の推移", fontproperties=font_prop)
+    plt.xticks(rotation=45, fontproperties=font_prop)
+    plt.yticks(fontproperties=font_prop)
 
     st.pyplot(fig)
 
