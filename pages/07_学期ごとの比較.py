@@ -1,35 +1,46 @@
+import os
 import streamlit as st
 import pandas as pd
-import os
-import matplotlib
 import matplotlib.pyplot as plt
-matplotlib.rcParams['font.family'] = 'MS Gothic'
+import matplotlib.font_manager as fm
+import seaborn as sns
 
-st.set_page_config(page_title="学期ごとの比較", layout="wide")
-st.title("📊 学期ごとの学習時間比較")
+# 🎌 日本語フォントの読み込み
+FONT_PATH = os.path.join("fonts", "ipaexg.ttf")
+if os.path.exists(FONT_PATH):
+    font_prop = fm.FontProperties(fname=FONT_PATH)
+else:
+    font_prop = None
 
+# 📄 データ読み込み
 DATA_PATH = "data/logs.csv"
+st.title("📅 学期ごとの学習時間比較")
 
-if os.path.exists(DATA_PATH):
-    logs = pd.read_csv(DATA_PATH)
+try:
+    df = pd.read_csv(DATA_PATH)
+    df['date'] = pd.to_datetime(df['date'])
 
-    if "date" in logs.columns:
-        logs["date"] = pd.to_datetime(logs["date"], errors="coerce")
+    users = df['name'].unique()
+    selected_user = st.selectbox("ユーザーを選択してください", users)
 
-    # 必要な列の整形
-    logs["study_time"] = pd.to_numeric(logs["study_time"], errors="coerce")
-    logs["period"] = logs["period"].fillna("未設定")
+    user_data = df[df['name'] == selected_user]
 
-    # 学期ごとの合計学習時間を算出
-    period_summary = logs.groupby("period")["study_time"].sum().reset_index()
+    # 学期（period）ごとの合計学習時間
+    summary = user_data.groupby('period')['study_time'].sum().reset_index()
 
-    # グラフ描画
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.bar(period_summary["period"], period_summary["study_time"], color='skyblue')
-    ax.set_title("学期ごとの学習時間", fontsize=16)
-    ax.set_xlabel("学期", fontsize=12)
-    ax.set_ylabel("学習時間（時間）", fontsize=12)
+    fig, ax = plt.subplots()
+    sns.barplot(data=summary, x='period', y='study_time', ax=ax)
+
+    # ラベルとタイトルにフォントを明示指定（ここが超重要）
+    ax.set_xlabel("学期", fontproperties=font_prop)
+    ax.set_ylabel("合計学習時間（分）", fontproperties=font_prop)
+    ax.set_title(f"{selected_user} さんの学期ごとの学習時間", fontproperties=font_prop)
+    ax.set_xticklabels(ax.get_xticklabels(), fontproperties=font_prop)
+    ax.set_yticklabels(ax.get_yticklabels(), fontproperties=font_prop)
+
     st.pyplot(fig)
 
-else:
-    st.warning("まだ記録が存在しません。まずは記録を入力してください。")
+except FileNotFoundError:
+    st.warning(f"学習ログファイルが見つかりませんでした: {DATA_PATH}")
+except Exception as e:
+    st.error(f"エラーが発生しました: {e}")
