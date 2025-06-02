@@ -7,7 +7,6 @@ st.markdown("ゼミ生の皆さん、ようこそ！このアプリでは、あ�
 
 st.markdown("---")
 
-# 📱 モバイル対応ナビゲーション
 st.subheader("🔗 ナビゲーションメニュー")
 
 page = st.selectbox("📂 ページを選んで移動できます", [
@@ -23,7 +22,7 @@ page = st.selectbox("📂 ページを選んで移動できます", [
     "📚 学習傾向の可視化"
 ])
 
-# ✅ ファイルパスベースのページ遷移（実在するファイル名を使用）
+# ファイル名に対応するページ遷移（Cloudで必須）
 if page == "🏠 ホーム":
     st.switch_page("pages/00_ホーム.py")
 elif page == "📝 記録入力":
@@ -40,7 +39,7 @@ elif page == "📋 記録一覧":
     st.switch_page("pages/04_記録一覧.py")
 elif page == "📈 進捗グラフ":
     st.switch_page("pages/05_進捗グラフ.py")
-elif page == "📚 学習傾向の可視化":
-    st.switch_page("pages/06_学習傾向の可視化.py")
 elif page == "📊 学期ごとの比較":
     st.switch_page("pages/07_学期ごとの比較.py")
+elif page == "📚 学習傾向の可視化":
+    st.switch_page("pages/06_学習傾向の可視化.py")
