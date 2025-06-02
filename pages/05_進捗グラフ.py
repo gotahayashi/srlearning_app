@@ -12,7 +12,7 @@ if platform.system() == "Linux":
 else:
     matplotlib.rc('font', family='Yu Gothic')
 
-# 📄 CSVファイル読み込み（パスは必要に応じて調整）
+# 📄 CSVファイル読み込み
 DATA_PATH = "data/logs.csv"
 
 # 📊 グラフページ本体
@@ -20,21 +20,21 @@ st.title("📈 学習時間の推移")
 
 try:
     df = pd.read_csv(DATA_PATH)
-    df['日付'] = pd.to_datetime(df['日付'])
+    df['date'] = pd.to_datetime(df['date'])
 
     # ユーザー選択（フィルター）
-    users = df['名前'].unique()
+    users = df['name'].unique()
     selected_user = st.selectbox("ユーザーを選択してください", users)
 
     # フィルター適用
-    user_data = df[df['名前'] == selected_user]
+    user_data = df[df['name'] == selected_user]
 
     # 日付ごとの学習時間の合計を表示
-    summary = user_data.groupby('日付')['学習時間'].sum().reset_index()
+    summary = user_data.groupby('date')['study_time'].sum().reset_index()
 
     # グラフ描画
     fig, ax = plt.subplots()
-    ax.plot(summary['日付'], summary['学習時間'], marker='o')
+    ax.plot(summary['date'], summary['study_time'], marker='o')
     ax.set_xlabel("日付")
     ax.set_ylabel("学習時間（分）")
     ax.set_title(f"{selected_user} さんの学習時間の推移")
