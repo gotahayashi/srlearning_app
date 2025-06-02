@@ -1,24 +1,18 @@
 import os
-import platform
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib.font_manager as fm
 
-# Cloud向けフォント設定（再キャッシュ含む）
-if platform.system() == "Linux":
-    os.system("apt-get update && apt-get install -y fonts-ipafont")
-
-    # フォントキャッシュ削除 & 再構築
-    import shutil
-    cache_dir = os.path.expanduser("~/.cache/matplotlib")
-    if os.path.exists(cache_dir):
-        shutil.rmtree(cache_dir)
-    matplotlib.rcParams['font.family'] = 'IPAexGothic'
+# 🎌 フォントファイルを直接読み込んで日本語を表示（Cloudでも確実に効く）
+FONT_PATH = os.path.join("fonts", "ipaexg.ttf")
+if os.path.exists(FONT_PATH):
+    font_prop = fm.FontProperties(fname=FONT_PATH)
+    plt.rcParams['font.family'] = font_prop.get_name()
 else:
-    matplotlib.rcParams['font.family'] = 'Yu Gothic'
+    plt.rcParams['font.family'] = 'sans-serif'  # fallback
 
-# データ読み込み
+# 📄 CSVファイルの読み込み
 DATA_PATH = "data/logs.csv"
 st.title("📈 学習時間の推移")
 
@@ -32,6 +26,7 @@ try:
     user_data = df[df['name'] == selected_user]
     summary = user_data.groupby('date')['study_time'].sum().reset_index()
 
+    # 📊 グラフ描画
     fig, ax = plt.subplots()
     ax.plot(summary['date'], summary['study_time'], marker='o')
     ax.set_xlabel("日付")
