@@ -1,61 +1,75 @@
 import streamlit as st
-import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
 from datetime import datetime
-import os
+import pandas as pd
 
-st.set_page_config(page_title="記録入力", layout="centered")
-st.title("📝 今日の学習記録を入力")
+# --- Google Sheets 認証設定 ---
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+creds = Credentials.from_service_account_info(
+    st.secrets["google_service_account"], scopes=SCOPES
+)
+gc = gspread.authorize(creds)
 
-DATA_PATH = "data/logs.csv"
+# --- スプレッドシートIDで開く ---
+SPREADSHEET_ID = "1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
+sheet = gc.open_by_key(SPREADSHEET_ID).sheet1
 
-with st.form("log_form", clear_on_submit=True):
-    st.markdown("### 🔽 以下のフォームに入力してください")
+# --- タイトル ---
+st.title("📘 英語学習記録フォーム")
 
-    # 🧾 2列レイアウト
-    col1, col2 = st.columns(2)
-    with col1:
-        name = st.text_input("名前", placeholder="例：Gota Hayashi", help="自分の名前を入力してください")
-        grade = st.selectbox("学年", ["1年", "2年", "3年", "4年"])
-        date = st.date_input("学習日", value=datetime.today())
-        study_time = st.number_input("学習時間（時間）", min_value=0.0, step=0.1, help="例：1時間30分 → 1.5")
-    with col2:
-        textbook = st.text_input("使用教材", placeholder="例：DUO, 英文法", help="使用した教材を入力")
-        task = st.text_input("学習内容", placeholder="例：Unit3復習, 英作文など", help="具体的な学習内容を記入")
-        environment = st.radio("学習場所", ["自宅", "カフェ", "図書館", "その他"])
-        focus = st.slider("集中度（1＝低い〜5＝高い）", 1, 5)
-        period = st.selectbox("期間", ["学期1", "夏休み", "学期2", "春休み"])
+# --- 入力フォーム ---
+name = st.text_input("🧑 名前（任意）")
+category = st.selectbox("📚 学習カテゴリ", ["読む", "聞く", "話す", "書く", "単語", "文法", "その他"])
+minutes = st.number_input("⏱ 学習時間（分）", min_value=1, step=1)
+comment = st.text_area("📝 コメント・振り返り")
 
-    submitted = st.form_submit_button("保存する")
+# --- 記録送信 ---
+if st.button("✅ Google Sheetsに保存"):
+    new_row = [
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        name or "",
+        category or "",
+        str(minutes),
+        comment or ""
+    ]
 
-    if submitted:
-        # ✅ 必須チェック
-        if not name or not textbook or not task:
-            st.error("⚠️ 名前・教材・学習内容はすべて入力してください。")
-        else:
-            if study_time > 10:
-                st.warning("⚠️ 長時間の入力です。内容をご確認ください。")
+    st.write("📤 送信予定データ:")
+    st.json(new_row)
 
-            new_data = pd.DataFrame([{
-                "name": name,
-                "grade": grade,
-                "date": date,
-                "study_time": study_time,
-                "textbook": textbook,
-                "task": task,
-                "environment": environment,
-                "focus": focus,
-                "period": period
-            }])
+    try:
+        result = sheet.append_row(new_row)
+        st.success("✅ Google Sheets に保存されました！")
+    except Exception as e:
+        st.error("❌ Google Sheets への保存に失敗しました")
+        st.code(str(e))
+        result = None
 
-            if os.path.exists(DATA_PATH):
-                old_data = pd.read_csv(DATA_PATH)
-                all_data = pd.concat([old_data, new_data], ignore_index=True)
-            else:
-                all_data = new_data
+    # --- ログを try の外で出力 ---
+    st.write("📌 append_row の戻り値:", result)
+    st.write("✅ 認証中のサービスアカウント:", creds.service_account_email)
+    st.write("✅ 接続中のスプレッドシート名:", sheet.title)
+    worksheets = gc.open_by_key(SPREADSHEET_ID).worksheets()
+    st.write("📋 スプレッドシート内のシート一覧:", [ws.title for ws in worksheets])
+    st.write("📄 現在のシート内容（先頭5行）:", sheet.get_all_values()[:5])
 
-            all_data.to_csv(DATA_PATH, index=False)
-            st.success("✅ 記録が保存されました！")
+# --- 区切り線と記録一覧の見出し ---
+st.markdown("---")
+st.subheader("📄 過去の記録一覧")
 
-            # 入力内容を表示
-            st.markdown("### 🕒 保存された記録")
-            st.dataframe(new_data)
+# --- 一覧表示 ---
+try:
+    records = sheet.get_all_values()
+    if len(records) > 1:
+        headers = ["日付（timestamp）", "名前", "カテゴリ", "分数", "コメント"]
+        data = records[1:]
+        df = pd.DataFrame(data, columns=headers)
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("まだ記録がありません。")
+except Exception as e:
+    st.error("❌ データ取得エラー")
+    st.code(str(e))

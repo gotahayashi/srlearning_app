@@ -1,6 +1,6 @@
-﻿name,grade,date,study_time,textbook,task,environment,focus,period
-Gota,4年,2025-05-28,1.0,"Python, Streamlit",Day 3 作業,自宅,2,学期1
-Gota,4年,2025-05-30,0.1,"Python, Streamlit",学年のコード作成,自宅,2,学期1
-Gota,4年,2025-05-30,1.0,"Python, Streamlit",Day 5 コード,自宅,2,学期1
-Gota,4年,2025-05-31,1.0,"Python, Streamlit",Day6とDay 7のコーディング,自宅,2,学期1
-Test 2,4年,2025-06-01,1.0,Thai,Thai workbook unit 1,カフェ,2,学期1
+﻿name,grade,date,study_time,textbook,task,environment,focus,period,category
+Gota,4年,2025/5/28,1,"Python, Streamlit",Day 3 振り返り,自宅,集中できた,Streamlit,
+Gota,4年,2025/5/30,0.1,"Python, Streamlit",Day 4の振り返り,自宅,集中できた,Coding,
+Gota,4年,2025/5/30,1,"Python, Streamlit",Day 5 自宅学習,自宅,Coding,Coding,
+Gota,4年,2025/5/31,1,"Python, Streamlit",Day 6と7の入力ページ改善,自宅,集中できた,Coding,
+Test 2,4年,2025/6/1,1,Thai,Thai workbook unit 1,カフェ,集中できた,Review,Thai
