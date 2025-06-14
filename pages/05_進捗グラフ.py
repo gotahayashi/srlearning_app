@@ -3,6 +3,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import matplotlib.cm as cm
+import numpy as np
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
@@ -60,9 +62,12 @@ try:
     if summary.empty:
         st.info("直近1週間の記録が見つかりませんでした。")
     else:
+        # 🎨 カラーマップでユーザーごとに色分け
+        colors = cm.tab20(np.linspace(0, 1, len(summary)))
+
         # 📊 横棒グラフ描画
         fig, ax = plt.subplots()
-        ax.barh(summary.index.astype(str), summary.values)
+        ax.barh(summary.index.astype(str), summary.values, color=colors)
 
         ax.set_xlabel("学習時間（分）", fontproperties=font_prop)
         ax.set_title("直近1週間の学習時間（ユーザー別）", fontproperties=font_prop)
