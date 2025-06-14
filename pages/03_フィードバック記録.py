@@ -24,7 +24,7 @@ FEEDBACK_SHEET_NAME = "feedback"
 try:
     logs_ws = client.open_by_key(SPREADSHEET_ID).worksheet(LOGS_SHEET_NAME)
     logs_df = pd.DataFrame(logs_ws.get_all_records())
-    logs_df.columns = [c.strip() for c in logs_df.columns]  # 念のため空白除去
+    logs_df.columns = [c.strip() for c in logs_df.columns]
 
     if "名前" not in logs_df.columns:
         st.error("logsシートに「名前」列が見つかりません。")
@@ -64,13 +64,10 @@ with st.form("feedback_form"):
 try:
     feedback_ws = client.open_by_key(SPREADSHEET_ID).worksheet(FEEDBACK_SHEET_NAME)
     feedback_df = pd.DataFrame(feedback_ws.get_all_records())
-    feedback_df.columns = [c.strip().lower() for c in feedback_df.columns]  # 列名を整える
+    feedback_df.columns = [c.strip() for c in feedback_df.columns]
 
-    # デバッグ用に列名確認したい場合（必要に応じて）
-    # st.write("列名:", feedback_df.columns.tolist())
-
-    if "name" not in feedback_df.columns:
-        st.error("feedbackシートに 'name' 列が見つかりません。")
+    if "名前" not in feedback_df.columns:
+        st.error("feedbackシートに「名前」列が見つかりません。")
         st.stop()
 
     student_feedback = feedback_df[feedback_df["名前"] == selected_name]
