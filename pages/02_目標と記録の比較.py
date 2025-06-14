@@ -1,59 +1,72 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import gspread
+from google.oauth2.service_account import Credentials
 
-st.title("🎯 目標と記録の比較")
+st.set_page_config(page_title="ビジョンのふりかえり", layout="centered")
+st.title("🎯 ビジョンのふりかえり")
 
-# データ読み込み
+# Google Sheets 認証設定
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+credentials = Credentials.from_service_account_info(
+    st.secrets["google_service_account"],
+    scopes=scope
+)
+client = gspread.authorize(credentials)
+
+# Google Sheets ID（スプレッドシートのIDのみ）
+SPREADSHEET_ID = "1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
+
+# visions・reflections シートの読み込み
 try:
-    goals = pd.read_csv("data/goals.csv")
-    logs = pd.read_csv("data/logs.csv")
-except FileNotFoundError:
-    st.warning("データファイルが見つかりません。記録または目標を先に入力してください。")
+    visions_ws = client.open_by_key(SPREADSHEET_ID).worksheet("visions")
+    reflections_ws = client.open_by_key(SPREADSHEET_ID).worksheet("reflections")
+    visions_df = pd.DataFrame(visions_ws.get_all_records())
+except Exception as e:
+    st.error("Google Sheets の読み込みに失敗しました。")
+    st.exception(e)
     st.stop()
 
-# 日付変換（logsのみ）
-logs["date"] = pd.to_datetime(logs["date"], format="ISO8601", errors="coerce")
-
-# 名前の選択肢（NaNを除く）
-names = sorted(logs["name"].dropna().unique())
-
+# 名前の選択
+names = sorted(visions_df["名前"].dropna().unique())
 if not names:
-    st.info("まだ記録が入力されていないようです。先に記録ページで学習を記録してください。")
+    st.info("まだビジョンが登録されていません。")
     st.stop()
 
-selected_name = st.selectbox("確認する学生を選んでください", names)
+selected_name = st.selectbox("名前を選んでください", names)
 
-# 今週の開始日（月曜日）
-today = datetime.today()
-start_of_week = today - pd.Timedelta(days=today.weekday())
+# 選択された学生の最新ビジョンを取得
+student_visions = visions_df[visions_df["名前"] == selected_name]
+if student_visions.empty:
+    st.warning("ビジョンが見つかりません。")
+    st.stop()
 
-# 選択された学生の今週の記録を抽出
-student_logs = logs[(logs["name"] == selected_name) & (logs["date"] >= start_of_week)]
-student_logs["study_time"] = pd.to_numeric(student_logs["study_time"], errors="coerce")
-total_hours = student_logs["study_time"].sum()
+latest = student_visions.iloc[-1]
+title = latest["目標タイトル"]
+vision = latest["目標内容"]
+deadline = latest["達成期限"]
 
-# 目標取得
-student_goal = goals[goals["name"] == selected_name]
-if student_goal.empty:
-    st.warning(f"{selected_name} の目標がまだ登録されていません。")
-else:
-    short_term_goal = student_goal.iloc[-1]["short_term_goal"]
-    st.subheader("📌 今週の目標")
-    st.write(short_term_goal)
+# ビジョンの表示
+st.subheader("🎯 目標タイトル")
+st.write(title)
 
-st.subheader("📊 今週の学習時間")
-st.write(f"合計: **{total_hours} 時間**")
+st.subheader("📝 目標内容")
+st.write(vision)
 
-# 目標との差の可視化（仮に4時間を基準）
-RECOMMENDED_HOURS = 4.0
-difference = total_hours - RECOMMENDED_HOURS
+st.subheader("📅 達成期限")
+st.write(deadline)
 
-if difference >= 0:
-    st.success(f"よくがんばりました！目標を {difference:.1f} 時間 上回っています。")
-else:
-    st.error(f"あと {-difference:.1f} 時間 がんばりましょう！")
+# 振り返りコメント入力
+st.subheader("💬 振り返りコメント")
+reflection = st.text_area("自由にふりかえってみましょう（例：達成できたか、難しかったこと、工夫したことなど）")
 
-# 今週の記録表示（デバッグや確認用）
-with st.expander("📄 今週の記録詳細を確認する"):
-    st.dataframe(student_logs)
+# コメント送信処理
+if st.button("コメントを送信する"):
+    try:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        reflections_ws.append_row([timestamp, selected_name, vision, reflection])
+        st.success("コメントを保存しました。おつかれさまでした！")
+    except Exception as e:
+        st.error("コメントの保存に失敗しました。")
+        st.exception(e)
