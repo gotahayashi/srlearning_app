@@ -24,7 +24,8 @@ LOGS_SHEET_NAME = "logs"
 try:
     logs_ws = client.open_by_key(SPREADSHEET_ID).worksheet(LOGS_SHEET_NAME)
     logs_df = pd.DataFrame(logs_ws.get_all_records())
-    names = sorted(logs_df["名前"].dropna().unique())  # ← ここを修正
+    # ✅ 数値と文字列が混在していてもOKなように変換
+    names = sorted(logs_df["名前"].dropna().astype(str).unique())
 except Exception as e:
     st.error("logs シートの読み込みに失敗しました。")
     st.exception(e)
