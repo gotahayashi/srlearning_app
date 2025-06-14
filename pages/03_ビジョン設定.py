@@ -1,15 +1,25 @@
-
 import streamlit as st
 import pandas as pd
 from datetime import date
-import os
+import gspread
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="ビジョン設定", layout="centered")
 st.title("🌟 ビジョン設定フォーム")
 
-VISION_CSV = "data/visions.csv"
-os.makedirs("data", exist_ok=True)
+# Google認証設定
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+credentials = Credentials.from_service_account_info(
+    st.secrets["google_service_account"],
+    scopes=scope
+)
+gc = gspread.authorize(credentials)
 
+# 接続するスプレッドシートとシート名
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
+worksheet = gc.open_by_url(SPREADSHEET_URL).worksheet("visions")  # ← 必ずシート名"visions"と一致
+
+# 入力フォーム
 with st.form("vision_form"):
     name = st.text_input("名前")
     grade = st.selectbox("学年", ["1年", "2年", "3年", "4年"])
@@ -20,19 +30,6 @@ with st.form("vision_form"):
     submitted = st.form_submit_button("保存する")
 
     if submitted:
-        new_data = pd.DataFrame([{
-            "name": name,
-            "grade": grade,
-            "title": title,
-            "content": content,
-            "deadline": deadline
-        }])
-
-        if os.path.exists(VISION_CSV):
-            existing = pd.read_csv(VISION_CSV)
-            updated = pd.concat([existing, new_data], ignore_index=True)
-        else:
-            updated = new_data
-
-        updated.to_csv(VISION_CSV, index=False)
-        st.success("ビジョンを保存しました！")
+        new_row = [name, grade, title, content, str(deadline)]
+        worksheet.append_row(new_row)
+        st.success("✅ ビジョンをGoogle Sheetsに保存しました！")
