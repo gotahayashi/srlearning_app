@@ -1,43 +1,27 @@
 ﻿import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
-import pandas as pd
-from datetime import datetime
-from make_vision_page import show_vision_page
-from make_page import show_input_page
 
-# --- ページ全体の設定はここだけ ---
-st.set_page_config(page_title="英語学習ログ", layout="wide")
+st.set_page_config(page_title="SR Learning App", page_icon="📘", layout="centered")
 
-# Google認証設定
-scope = ["https://www.googleapis.com/auth/spreadsheets"]
-credentials = Credentials.from_service_account_info(
-    st.secrets["google_service_account"], scopes=scope
-)
-gc = gspread.authorize(credentials)
+st.title("📘 Self-Regulated Learning App")
+st.subheader("ようこそ！")
 
-# Google Sheets設定
-SPREADSHEET_KEY = "1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
-worksheet = gc.open_by_key(SPREADSHEET_KEY).worksheet("logs")
+st.markdown("""
+このアプリは、大学生が自己調整学習（SRL）を実践するために開発されました。  
+以下の各ページを活用して、あなたの英語学習をより効果的に管理しましょう。
 
-# サイドバー メニュー設定
-st.sidebar.title("📘 メニュー")
-page = st.sidebar.radio("ページを選択", ["🌟 Visionの作成", "📝 学習ログの記録", "📊 ログの一覧"])
+---
 
-# ページごと表示
-if page == "🌟 Visionの作成":
-    show_vision_page()
+### 📋 利用できるページ（左のサイドバーから選択）：
 
-elif page == "📝 学習ログの記録":
-    show_input_page(worksheet)
+- ✅ **ビジョン設定**
+- 📝 **学習ログの記録**
+- 📊 **ログの一覧表示**
 
-elif page == "📊 ログの一覧":
-    st.subheader("📊 ログ一覧")
-    data = worksheet.get_all_records()
-    df = pd.DataFrame(data)
-    if not df.empty:
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df = df.sort_values("timestamp", ascending=False)
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info("まだ記録がありません。")
+---
+
+### 👉 左のメニューからページを選んでください。
+""")
+
+st.info("※このアプリは東京経済大学のゼミ活動の一環として使用されています。")
+st.markdown("---")
+st.caption("© 2025 Gota Hayashi Lab")
