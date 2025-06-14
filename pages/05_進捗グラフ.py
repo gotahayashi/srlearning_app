@@ -30,6 +30,7 @@ try:
 
     # 🧮 データ取得
     logs_df = pd.DataFrame(logs_ws.get_all_records())
+    st.write("列名チェック:", logs_df.columns.tolist())
     visions_df = pd.DataFrame(visions_ws.get_all_records())
 
     # ✅ 日本語列名を英語に変換（内部処理用）
