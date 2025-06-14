@@ -30,29 +30,36 @@ try:
 
     # 🧮 データ取得
     logs_df = pd.DataFrame(logs_ws.get_all_records())
-    st.write("列名チェック:", logs_df.columns.tolist())
     visions_df = pd.DataFrame(visions_ws.get_all_records())
 
-    # ✅ 日本語列名を英語に変換（内部処理用）
-    logs_df.rename(columns={
-        "日付（timestamp）": "date",
-        "名前": "name",
-        "分数": "study_time"
-    }, inplace=True)
+    # ✅ 列名の柔軟変換（全角・空白なども吸収）
+    rename_map = {}
+    for col in logs_df.columns:
+        if "日付" in col:
+            rename_map[col] = "date"
+        elif "名前" in col:
+            rename_map[col] = "name"
+        elif "分数" in col:
+            rename_map[col] = "study_time"
+    logs_df.rename(columns=rename_map, inplace=True)
 
-    # 日付・数値変換 + 欠損除外
+    # ⛔ 変換後の列確認（開発中のみ有効）
+    # st.write("変換後の列名:", logs_df.columns.tolist())
+
+    # ✅ 日付・数値変換 + 欠損除外
     logs_df['date'] = pd.to_datetime(logs_df['date'], errors='coerce')
     logs_df['study_time'] = pd.to_numeric(logs_df['study_time'], errors='coerce')
     logs_df = logs_df.dropna(subset=['date', 'study_time', 'name'])
 
+    # 📋 ユーザー選択
     users = logs_df['name'].unique()
     selected_user = st.selectbox("ユーザーを選択してください", users)
 
-    # 📊 ログからユーザーの学習時間推移
+    # 📊 ユーザーの学習ログから推移を集計
     user_logs = logs_df[logs_df['name'] == selected_user]
     summary = user_logs.groupby('date')['study_time'].sum().reset_index()
 
-    # 🎯 Vision 表示（該当者がいれば）
+    # 🎯 Vision 表示（あれば）
     user_vision = visions_df[visions_df['name'] == selected_user]
     if not user_vision.empty:
         st.info(f"🎯 ビジョン: {user_vision.iloc[0].get('vision', '（未記入）')}")
