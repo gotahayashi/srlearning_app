@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="📊 週間学習時間", layout="centered")
 st.title("📊 ユーザー別・直近1週間の学習時間")
 
-# 🎌 日本語フォント（存在する場合に使う）
+# 🎌 日本語フォント読み込み（存在すれば）
 FONT_PATH = os.path.join("fonts", "ipaexg.ttf")
 font_prop = fm.FontProperties(fname=FONT_PATH) if os.path.exists(FONT_PATH) else None
 
@@ -29,7 +29,7 @@ try:
     logs_ws = gc.open_by_key(SPREADSHEET_ID).worksheet("logs")
     logs_df = pd.DataFrame(logs_ws.get_all_records())
 
-    # ✅ 日本語列名を英語に変換（前後の空白も対応）
+    # ✅ 日本語列名を英語に変換（前後スペースにも対応）
     rename_map = {}
     for col in logs_df.columns:
         col_clean = col.strip()
@@ -46,12 +46,15 @@ try:
     logs_df['study_time'] = pd.to_numeric(logs_df['study_time'], errors='coerce')
     logs_df = logs_df.dropna(subset=['date', 'study_time', 'name'])
 
+    # ✅ 空白または非文字列の名前を除外
+    logs_df = logs_df[logs_df['name'].astype(str).str.strip() != ""]
+
     # 📆 直近7日間に絞る
     today = datetime.today()
     one_week_ago = today - timedelta(days=7)
     recent_logs = logs_df[logs_df['date'] >= one_week_ago]
 
-    # 👥 ユーザー別に合計時間を算出
+    # 👥 ユーザー別に合計時間を算出（昇順に並び替え）
     summary = recent_logs.groupby('name')['study_time'].sum().sort_values(ascending=True)
 
     if summary.empty:
@@ -59,7 +62,7 @@ try:
     else:
         # 📊 横棒グラフ描画
         fig, ax = plt.subplots()
-        ax.barh(summary.index, summary.values)
+        ax.barh(summary.index.astype(str), summary.values)
 
         ax.set_xlabel("学習時間（分）", fontproperties=font_prop)
         ax.set_title("直近1週間の学習時間（ユーザー別）", fontproperties=font_prop)
