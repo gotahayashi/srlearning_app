@@ -32,7 +32,14 @@ try:
     logs_df = pd.DataFrame(logs_ws.get_all_records())
     visions_df = pd.DataFrame(visions_ws.get_all_records())
 
-    # 日付変換
+    # ✅ 日本語列名を英語に変換（内部処理用）
+    logs_df.rename(columns={
+        "日付（timestamp）": "date",
+        "名前": "name",
+        "分数": "study_time"
+    }, inplace=True)
+
+    # 日付・数値変換 + 欠損除外
     logs_df['date'] = pd.to_datetime(logs_df['date'], errors='coerce')
     logs_df['study_time'] = pd.to_numeric(logs_df['study_time'], errors='coerce')
     logs_df = logs_df.dropna(subset=['date', 'study_time', 'name'])
@@ -48,7 +55,7 @@ try:
     user_vision = visions_df[visions_df['name'] == selected_user]
     if not user_vision.empty:
         st.info(f"🎯 ビジョン: {user_vision.iloc[0].get('vision', '（未記入）')}")
-    
+
     # 📈 グラフ表示
     fig, ax = plt.subplots()
     ax.plot(summary['date'], summary['study_time'], marker='o')
@@ -58,7 +65,7 @@ try:
     ax.set_ylabel("学習時間（分）", fontproperties=font_prop)
     plt.xticks(rotation=45, fontproperties=font_prop)
     plt.yticks(fontproperties=font_prop)
-    
+
     st.pyplot(fig)
 
 except Exception as e:
