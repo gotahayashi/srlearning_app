@@ -32,19 +32,17 @@ try:
     logs_df = pd.DataFrame(logs_ws.get_all_records())
     visions_df = pd.DataFrame(visions_ws.get_all_records())
 
-    # ✅ 列名の柔軟変換（全角・空白なども吸収）
+    # ✅ 列名の柔軟変換（前後の空白を除去して判定）
     rename_map = {}
     for col in logs_df.columns:
-        if "日付" in col:
+        col_clean = col.strip()
+        if "日付" in col_clean:
             rename_map[col] = "date"
-        elif "名前" in col:
+        elif "名前" in col_clean:
             rename_map[col] = "name"
-        elif "分数" in col:
+        elif "分数" in col_clean:
             rename_map[col] = "study_time"
     logs_df.rename(columns=rename_map, inplace=True)
-
-    # ⛔ 変換後の列確認（開発中のみ有効）
-    # st.write("変換後の列名:", logs_df.columns.tolist())
 
     # ✅ 日付・数値変換 + 欠損除外
     logs_df['date'] = pd.to_datetime(logs_df['date'], errors='coerce')
