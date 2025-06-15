@@ -15,7 +15,6 @@ credentials = Credentials.from_service_account_info(
 )
 client = gspread.authorize(credentials)
 
-# Google Sheets ID（スプレッドシートのIDのみ）
 SPREADSHEET_ID = "1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
 
 # visions・reflections シートの読み込み
@@ -23,14 +22,23 @@ try:
     visions_ws = client.open_by_key(SPREADSHEET_ID).worksheet("visions")
     reflections_ws = client.open_by_key(SPREADSHEET_ID).worksheet("reflections")
     visions_df = pd.DataFrame(visions_ws.get_all_records())
-    visions_df.columns = visions_df.columns.str.strip()  # ← カラム名の前後スペースを除去
+
+    # カラム名の前後スペースを削除
+    visions_df.columns = visions_df.columns.str.strip()
+
+    # カラム確認用（必要なら表示）
+    st.write("📋 カラム名:", visions_df.columns.tolist())
+
+    # 「名前」列があるかチェック
+    if "名前" not in visions_df.columns:
+        st.error("❌『名前』列が見つかりません。以下のカラムを確認してください。")
+        st.write(visions_df.columns.tolist())
+        st.stop()
+
 except Exception as e:
     st.error("Google Sheets の読み込みに失敗しました。")
     st.exception(e)
     st.stop()
-
-# デバッグ用: カラム名表示（必要なら有効化）
-# st.write("カラム名一覧:", visions_df.columns.tolist())
 
 # 名前の選択
 names = sorted(visions_df["名前"].dropna().unique())
