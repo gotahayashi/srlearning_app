@@ -23,10 +23,14 @@ try:
     visions_ws = client.open_by_key(SPREADSHEET_ID).worksheet("visions")
     reflections_ws = client.open_by_key(SPREADSHEET_ID).worksheet("reflections")
     visions_df = pd.DataFrame(visions_ws.get_all_records())
+    visions_df.columns = visions_df.columns.str.strip()  # ← カラム名の前後スペースを除去
 except Exception as e:
     st.error("Google Sheets の読み込みに失敗しました。")
     st.exception(e)
     st.stop()
+
+# デバッグ用: カラム名表示（必要なら有効化）
+# st.write("カラム名一覧:", visions_df.columns.tolist())
 
 # 名前の選択
 names = sorted(visions_df["名前"].dropna().unique())
