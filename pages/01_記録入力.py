@@ -14,9 +14,9 @@ creds = Credentials.from_service_account_info(
 )
 gc = gspread.authorize(creds)
 
-# --- スプレッドシートIDで開く ---
+# --- スプレッドシートと logs シートを指定 ---
 SPREADSHEET_ID = "1vkAHTQwf4yNkJuJKv1A735wR5GG6feRmJQrAJPsYJ_Q"
-sheet = gc.open_by_key(SPREADSHEET_ID).sheet1
+sheet = gc.open_by_key(SPREADSHEET_ID).worksheet("logs")  # ← logsシートを明示的に指定
 
 # --- タイトル ---
 st.title("📘 英語学習記録フォーム")
@@ -42,7 +42,7 @@ if st.button("✅ Google Sheetsに保存"):
 
     try:
         result = sheet.append_row(new_row)
-        st.success("✅ Google Sheets に保存されました！")
+        st.success("✅ Google Sheets に保存されました！（logsシート）")
     except Exception as e:
         st.error("❌ Google Sheets への保存に失敗しました")
         st.code(str(e))
@@ -51,7 +51,7 @@ if st.button("✅ Google Sheetsに保存"):
     # --- ログを try の外で出力 ---
     st.write("📌 append_row の戻り値:", result)
     st.write("✅ 認証中のサービスアカウント:", creds.service_account_email)
-    st.write("✅ 接続中のスプレッドシート名:", sheet.title)
+    st.write("✅ 接続中のシート名:", sheet.title)  # ← ← ← シート名を確認
     worksheets = gc.open_by_key(SPREADSHEET_ID).worksheets()
     st.write("📋 スプレッドシート内のシート一覧:", [ws.title for ws in worksheets])
     st.write("📄 現在のシート内容（先頭5行）:", sheet.get_all_values()[:5])
