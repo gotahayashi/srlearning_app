@@ -33,7 +33,7 @@ try:
         st.write(visions_df.columns.tolist())
         st.stop()
 
-    # 「名前」列を文字列化 + 空白除去（← TypeError 対策）
+    # 「名前」列を文字列化 + 空白除去（TypeError 対策）
     visions_df["名前"] = visions_df["名前"].astype(str).str.strip()
 
 except Exception as e:
@@ -77,4 +77,9 @@ reflection = st.text_area("自由にふりかえってみましょう（例：�
 # --- コメント送信処理 ---
 if st.button("コメントを送信する"):
     try:
-        timestamp = dat
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        reflections_ws.append_row([timestamp, selected_name, vision, reflection])
+        st.success("コメントを保存しました。おつかれさまでした！")
+    except Exception as e:
+        st.error("コメントの保存に失敗しました。")
+        st.exception(e)
