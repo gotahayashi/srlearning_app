@@ -23,6 +23,10 @@ LOGS_SHEET_NAME = "logs"
 try:
     logs_ws = client.open_by_key(SPREADSHEET_ID).worksheet(LOGS_SHEET_NAME)
     logs_df = pd.DataFrame(logs_ws.get_all_records())
+
+    # ←★ この1行を追加して列名の前後空白を削除 ★→
+    logs_df.columns = [col.strip() for col in logs_df.columns]
+
 except Exception as e:
     st.error("データの読み込みに失敗しました。")
     st.exception(e)
